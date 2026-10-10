@@ -4,6 +4,7 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
         <div>
+
             <h2 class="text-2xl font-bold text-eco-dark">
                 Residents
             </h2>
@@ -11,7 +12,9 @@
             <p class="text-gray-500 mt-1">
                 Manage registered EcoTrack residents.
             </p>
+
         </div>
+
 
         {{-- Add Resident --}}
         <a
@@ -31,67 +34,76 @@
     {{-- Resident Statistics --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6">
 
+
         {{-- Total --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+
             <p class="text-sm text-gray-500">
                 Total Residents
             </p>
 
             <p class="text-3xl font-bold text-eco-dark mt-2">
-                {{ $residents->count() }}
+                {{ $totalResidents }}
             </p>
 
             <p class="text-xs text-gray-400 mt-2">
                 Registered residents
             </p>
+
         </div>
 
 
         {{-- Pending --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+
             <p class="text-sm text-gray-500">
                 Pending Verification
             </p>
 
             <p class="text-3xl font-bold text-eco-green mt-2">
-                {{ $residents->where('status', 'pending')->count() }}
+                {{ $pendingResidents }}
             </p>
 
             <p class="text-xs text-gray-400 mt-2">
                 Waiting for review
             </p>
+
         </div>
 
 
         {{-- Approved --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+
             <p class="text-sm text-gray-500">
                 Approved
             </p>
 
             <p class="text-3xl font-bold text-eco-green mt-2">
-                {{ $residents->where('status', 'approved')->count() }}
+                {{ $approvedResidents }}
             </p>
 
             <p class="text-xs text-gray-400 mt-2">
                 Verified residents
             </p>
+
         </div>
 
 
         {{-- Rejected --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+
             <p class="text-sm text-gray-500">
                 Rejected
             </p>
 
             <p class="text-3xl font-bold text-eco-dark mt-2">
-                {{ $residents->where('status', 'rejected')->count() }}
+                {{ $rejectedResidents }}
             </p>
 
             <p class="text-xs text-gray-400 mt-2">
                 Rejected applications
             </p>
+
         </div>
 
     </div>
@@ -100,12 +112,15 @@
     {{-- Residents Management --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
+
         {{-- Header + Search --}}
         <div class="px-4 sm:px-6 py-5 border-b border-gray-100">
 
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
+
                 <div>
+
                     <h3 class="text-lg font-semibold text-eco-dark">
                         Registered Residents
                     </h3>
@@ -113,32 +128,103 @@
                     <p class="text-sm text-gray-500 mt-1">
                         Manage residents registered in the EcoTrack system.
                     </p>
+
                 </div>
 
 
                 {{-- Search / Filter --}}
-                <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <form
+                    method="GET"
+                    action="{{ route('admin.residents.index') }}"
+                    class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto"
+                >
 
+                    {{-- Search --}}
                     <input
                         type="text"
+                        name="search"
+                        value="{{ request('search') }}"
                         placeholder="Search resident..."
                         class="w-full sm:w-64 rounded-lg border-gray-300
                                focus:border-eco-green
                                focus:ring-eco-green"
                     >
 
+
+                    {{-- Status --}}
                     <select
+                        name="status"
+                        onchange="this.form.submit()"
                         class="w-full sm:w-40 rounded-lg border-gray-300
                                focus:border-eco-green
                                focus:ring-eco-green"
                     >
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+
+                        <option
+                            value=""
+                            {{ request('status') === null || request('status') === '' ? 'selected' : '' }}
+                        >
+                            All Status
+                        </option>
+
+                        <option
+                            value="pending"
+                            {{ request('status') === 'pending' ? 'selected' : '' }}
+                        >
+                            Pending
+                        </option>
+
+                        <option
+                            value="approved"
+                            {{ request('status') === 'approved' ? 'selected' : '' }}
+                        >
+                            Approved
+                        </option>
+
+                        <option
+                            value="rejected"
+                            {{ request('status') === 'rejected' ? 'selected' : '' }}
+                        >
+                            Rejected
+                        </option>
+
                     </select>
 
-                </div>
+
+                    {{-- Search Button --}}
+                    <button
+                        type="submit"
+                        class="px-5 py-2.5 rounded-lg
+                               bg-eco-dark
+                               text-white
+                               font-medium
+                               hover:bg-eco-green
+                               transition
+                               shadow-sm"
+                    >
+                        Search
+                    </button>
+
+
+                    {{-- Clear --}}
+                    @if(request('search') || request('status'))
+
+                        <a
+                            href="{{ route('admin.residents.index') }}"
+                            class="px-5 py-2.5 rounded-lg
+                                   bg-gray-100
+                                   text-gray-700
+                                   font-medium
+                                   hover:bg-gray-200
+                                   transition
+                                   text-center"
+                        >
+                            Clear
+                        </a>
+
+                    @endif
+
+                </form>
 
             </div>
 
@@ -148,9 +234,11 @@
         {{-- Residents --}}
         @if ($residents->count() > 0)
 
+
             {{-- ========================= --}}
             {{-- DESKTOP TABLE --}}
             {{-- ========================= --}}
+
             <div class="hidden md:block overflow-x-auto">
 
                 <table class="w-full text-left">
@@ -194,6 +282,7 @@
 
                             <tr class="hover:bg-gray-50 transition">
 
+
                                 {{-- Resident --}}
                                 <td class="px-6 py-4">
 
@@ -206,19 +295,25 @@
 
                                 {{-- Email --}}
                                 <td class="px-6 py-4 text-sm text-gray-600">
+
                                     {{ $resident->email }}
+
                                 </td>
 
 
                                 {{-- Barangay --}}
                                 <td class="px-6 py-4 text-sm text-gray-600">
+
                                     {{ $resident->barangay?->name ?? '—' }}
+
                                 </td>
 
 
                                 {{-- Zone --}}
                                 <td class="px-6 py-4 text-sm text-gray-600">
+
                                     {{ $resident->zone ?? '—' }}
+
                                 </td>
 
 
@@ -227,25 +322,31 @@
 
                                     @if ($resident->status === 'approved')
 
-                                        <span class="inline-flex px-3 py-1 rounded-full
-                                                     text-xs font-semibold
-                                                     bg-eco-light text-eco-dark">
+                                        <span
+                                            class="inline-flex px-3 py-1 rounded-full
+                                                   text-xs font-semibold
+                                                   bg-eco-light text-eco-dark"
+                                        >
                                             Approved
                                         </span>
 
                                     @elseif ($resident->status === 'rejected')
 
-                                        <span class="inline-flex px-3 py-1 rounded-full
-                                                     text-xs font-semibold
-                                                     bg-gray-100 text-gray-700">
+                                        <span
+                                            class="inline-flex px-3 py-1 rounded-full
+                                                   text-xs font-semibold
+                                                   bg-gray-100 text-gray-700"
+                                        >
                                             Rejected
                                         </span>
 
                                     @else
 
-                                        <span class="inline-flex px-3 py-1 rounded-full
-                                                     text-xs font-semibold
-                                                     bg-eco-light text-eco-green">
+                                        <span
+                                            class="inline-flex px-3 py-1 rounded-full
+                                                   text-xs font-semibold
+                                                   bg-eco-light text-eco-green"
+                                        >
                                             Pending
                                         </span>
 
@@ -258,6 +359,7 @@
                                 <td class="px-6 py-4">
 
                                     <div class="flex justify-end gap-2">
+
 
                                         {{-- View --}}
                                         <a
@@ -303,11 +405,13 @@
             {{-- ========================= --}}
             {{-- MOBILE CARDS --}}
             {{-- ========================= --}}
+
             <div class="md:hidden divide-y divide-gray-100">
 
                 @foreach ($residents as $resident)
 
                     <div class="p-4 sm:p-5">
+
 
                         {{-- Resident Name --}}
                         <div class="flex items-start justify-between gap-3">
@@ -330,25 +434,31 @@
 
                                 @if ($resident->status === 'approved')
 
-                                    <span class="inline-flex px-2.5 py-1 rounded-full
-                                                 text-xs font-semibold
-                                                 bg-eco-light text-eco-dark">
+                                    <span
+                                        class="inline-flex px-2.5 py-1 rounded-full
+                                               text-xs font-semibold
+                                               bg-eco-light text-eco-dark"
+                                    >
                                         Approved
                                     </span>
 
                                 @elseif ($resident->status === 'rejected')
 
-                                    <span class="inline-flex px-2.5 py-1 rounded-full
-                                                 text-xs font-semibold
-                                                 bg-gray-100 text-gray-700">
+                                    <span
+                                        class="inline-flex px-2.5 py-1 rounded-full
+                                               text-xs font-semibold
+                                               bg-gray-100 text-gray-700"
+                                    >
                                         Rejected
                                     </span>
 
                                 @else
 
-                                    <span class="inline-flex px-2.5 py-1 rounded-full
-                                                 text-xs font-semibold
-                                                 bg-eco-light text-eco-green">
+                                    <span
+                                        class="inline-flex px-2.5 py-1 rounded-full
+                                               text-xs font-semibold
+                                               bg-eco-light text-eco-green"
+                                    >
                                         Pending
                                     </span>
 
@@ -393,6 +503,7 @@
                         {{-- Mobile Actions --}}
                         <div class="grid grid-cols-2 gap-2 mt-5">
 
+
                             {{-- View --}}
                             <a
                                 href="{{ route('admin.residents.show', $resident) }}"
@@ -430,12 +541,15 @@
 
         @else
 
+
             {{-- Empty State --}}
             <div class="px-6 py-16 text-center">
 
-                <div class="mx-auto w-16 h-16 rounded-full
-                            bg-eco-light
-                            flex items-center justify-center">
+                <div
+                    class="mx-auto w-16 h-16 rounded-full
+                           bg-eco-light
+                           flex items-center justify-center"
+                >
 
                     <span class="text-2xl">
                         👥
@@ -443,17 +557,41 @@
 
                 </div>
 
+
                 <h3 class="mt-4 text-lg font-semibold text-gray-800">
-                    No registered residents yet
+
+                    @if(request('search') || request('status'))
+
+                        No matching residents found
+
+                    @else
+
+                        No registered residents yet
+
+                    @endif
+
                 </h3>
 
+
                 <p class="mt-2 text-sm text-gray-500">
-                    Residents who register for EcoTrack will appear here.
+
+                    @if(request('search') || request('status'))
+
+                        Try changing your search or status filter.
+
+                    @else
+
+                        Residents who register for EcoTrack will appear here.
+
+                    @endif
+
                 </p>
 
             </div>
 
+
         @endif
+
 
     </div>
 

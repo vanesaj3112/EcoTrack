@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 
 class BarangayController extends Controller
@@ -17,13 +18,25 @@ class BarangayController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:100', 'unique:barangays,name'],
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                'unique:barangays,name',
+            ],
         ]);
 
-        Barangay::create([
-            'name' => $request->name,
+        $barangay = Barangay::create([
+            'name' => $validated['name'],
         ]);
+
+        AuditLogger::log(
+            'BARANGAY_CREATED',
+            'Created barangay: '
+            . $barangay->name
+            . '.'
+        );
 
         return redirect()
             ->route('admin.barangays.index')
@@ -32,7 +45,7 @@ class BarangayController extends Controller
 
     public function update(Request $request, Barangay $barangay)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
@@ -41,9 +54,23 @@ class BarangayController extends Controller
             ],
         ]);
 
+        $oldName = $barangay->name;
+        $newName = $validated['name'];
+
         $barangay->update([
-            'name' => $request->name,
+            'name' => $newName,
         ]);
+
+        if ($oldName !== $newName) {
+            AuditLogger::log(
+                'BARANGAY_UPDATED',
+                'Updated barangay name: '
+                . $oldName
+                . ' → '
+                . $newName
+                . '.'
+            );
+        }
 
         return redirect()
             ->route('admin.barangays.index')
@@ -52,7 +79,16 @@ class BarangayController extends Controller
 
     public function destroy(Barangay $barangay)
     {
+        $barangayName = $barangay->name;
+
         $barangay->delete();
+
+        AuditLogger::log(
+            'BARANGAY_DELETED',
+            'Deleted barangay: '
+            . $barangayName
+            . '.'
+        );
 
         return redirect()
             ->route('admin.barangays.index')

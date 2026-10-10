@@ -30,6 +30,11 @@ class AuthenticatedSessionController extends Controller
 
     $user = Auth::user();
 
+        // Garbage Collector
+if ($user->role === 'garbage_collector' && $user->status === 'approved') {
+    return redirect()->route('collector.dashboard');
+}
+
     // LGU Admin
     if ($user->role === 'lgu_admin') {
         return redirect()->route('dashboard');

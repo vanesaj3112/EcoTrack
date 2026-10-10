@@ -43,8 +43,76 @@ class User extends Authenticatable
         ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Model Events
+    |--------------------------------------------------------------------------
+    */
+
+    protected static function booted(): void
+    {
+        static::created(function (User $user) {
+
+            /*
+             * Only create an admin notification
+             * when a newly created account is a resident.
+             */
+            if ($user->role !== 'resident') {
+                return;
+            }
+
+            /*
+             * Get all LGU administrators.
+             */
+            $admins = User::where(
+                'role',
+                'lgu_admin'
+            )->get();
+
+            /*
+             * Create an unread notification
+             * for every LGU administrator.
+             */
+            foreach ($admins as $admin) {
+
+                AdminNotification::create([
+                    'admin_id' => $admin->id,
+
+                    'type' => 'new_resident',
+
+                    'reference_id' => $user->id,
+
+                    'title' => 'New Resident Registration',
+
+                    'message' => $user->name
+                        . ' has registered as a new resident.',
+
+                    'is_read' => false,
+                ]);
+
+            }
+        });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function barangay(): BelongsTo
     {
-        return $this->belongsTo(Barangay::class, 'brgy_id');
+        return $this->belongsTo(
+            Barangay::class,
+            'brgy_id'
+        );
+    }
+
+    public function adminNotifications()
+    {
+        return $this->hasMany(
+            AdminNotification::class,
+            'admin_id'
+        );
     }
 }
